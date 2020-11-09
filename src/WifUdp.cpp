@@ -20,11 +20,11 @@ const char *udpAddress = "192.168.0.30";
 const int udpPort = 9000;
 
 // credentials for ESP8266 STA
-// const char *sta_ssid1 = "VM4320118";
-// const char *sta_password1 = "m4nKrBcvgtkw";
+const char *sta_ssid1 = "VM4320118";
+const char *sta_password1 = "m4nKrBcvgtkw";
 
-const char *sta_ssid1 = "MagicMods";
-const char *sta_password1 = "Sx35018650";
+// const char *sta_ssid1 = "MagicMods";
+// const char *sta_password1 = "Sx35018650";
 
 IPAddress IPAP(192, 168, 0, 20);
 IPAddress gatewayAP(192, 168, 0, 1);
