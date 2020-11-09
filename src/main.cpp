@@ -79,7 +79,7 @@ void loop()
 
   UdpRead();
   uint8_t value = incomingPacket[1];
-  
+  Serial.print(incomingPacket);
   switch (incomingPacket[0])
   {
 
