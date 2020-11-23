@@ -2,7 +2,10 @@
 #include "Palettes.h"
 #include <FastLED.h> // // // // // // // // // // // // // // // // // // // // // //
 #include "main.h"
-#include "WifUdp.h" 
+#include <ESP8266WiFi.h>
+#include "WifUdp.h"
+#include "AsyncPing.h"
+#include "Ticker.h"
 
 FASTLED_USING_NAMESPACE
 
@@ -32,17 +35,31 @@ uint8_t BRIGHTNESS = 80;
 bool onOff[4] = {1, 1, 1, 1};
 
 CRGBPalette16 currentPalette;
+CRGBPalette16 cpBED;
+CRGBPalette16 cpDESK;
+CRGBPalette16 cpCEILLING;
+CRGBPalette16 cpWINR;
+CRGBPalette16 cpWINL;
+
 TBlendType currentBlending;
 
 bool bed = true;
 bool autoColor = true;
 String sColor = "rainbow";
 
+Ticker timer;
+
+AsyncPing Pings[1];
+IPAddress addrs[1];
+
+const char *ips[] = {"192.168.1.8","maoix.local",NULL};
+
 void setup()
 {
   Serial.begin(115200);
   delay(1000); // 3 second delay for recovery
   SetupWifi();
+  
   // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE, DATA_PIN_CEILLING, COLOR_ORDER>(leds_ceilling, NUM_LEDS_CEILLING).setCorrection(TypicalLEDStrip);
   FastLED.addLeds<LED_TYPE, DATA_PIN_DESK, COLOR_ORDER>(leds_desk, NUM_LEDS_DESK).setCorrection(TypicalLEDStrip);
@@ -54,6 +71,36 @@ void setup()
   // set master brightness control
   FastLED.setBrightness(BRIGHTNESS);
   currentBlending = LINEARBLEND;
+
+  for (int i = 0; i < 1; i++)
+  {
+    if (ips[i])
+    {
+      if (!WiFi.hostByName(ips[i], addrs[i]))
+        addrs[i].fromString(ips[i]);
+    }
+    else
+      addrs[i] = WiFi.gatewayIP();
+
+    Pings[i].on(true, [](const AsyncPingResponse &response) {
+      IPAddress addr(response.addr); //to prevent with no const toString() in 2.3.0
+      if (response.answer)
+        Serial.printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%d ms\n", response.size, addr.toString().c_str(), response.icmp_seq, response.ttl, response.time);
+      else
+        Serial.printf("no answer yet for %s icmp_seq=%d\n", addr.toString().c_str(), response.icmp_seq);
+      return false; //do not stop
+    });
+
+    Pings[i].on(false, [](const AsyncPingResponse &response) {
+      IPAddress addr(response.addr); //to prevent with no const toString() in 2.3.0
+      Serial.printf("total answer from %s sent %d recevied %d time %d ms\n", addr.toString().c_str(), response.total_sent, response.total_recv, response.total_time);
+      if (response.mac)
+        Serial.printf("detected eth address " MACSTR "\n", MAC2STR(response.mac->addr));
+      return true;
+    });
+  }
+  ping();
+  timer.attach(60, ping);
 }
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
@@ -73,115 +120,140 @@ SimplePatternList gPatterns = {
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0;                  // rotating "base color" used by many of the patterns
 
+void ping()
+{
+  for (int i = 0; i < 1; i++)
+  {
+    Serial.printf("started ping to %s:\n", addrs[i].toString().c_str());
+    Pings[i].begin(addrs[i],1);
+  }
+}
+
 void loop()
 {
-  EVERY_N_MILLISECONDS(200) { gHue++; }
 
-  UdpRead();
-  uint8_t value = incomingPacket[1];
-  Serial.print(incomingPacket);
-  switch (incomingPacket[0])
+  if (WiFi.status() != WL_CONNECTED)
   {
-
-  case 3:
+    digitalWrite(LED_BUILTIN, LOW);
+    WIFI_Connect();
+  }
+  else
   {
-    // Serial.print("Brightness :");
-    BRIGHTNESS = value;
-    FastLED.setBrightness(BRIGHTNESS);
-    // Serial.println(BRIGHTNESS);
-    }
-    break;
-    case 4:
-    {
-      Serial.print("Saturation");
-      Serial.println(value);
-    }
-    break;
-    case 5:
-    {
-      Serial.print("Color");
-      Serial.println(value);
-    }
-    break;
-    case 6:
-    {
-      Serial.print("Patterns");
-      Serial.println(value);
-    }
-    case 10:
-    {
-      Serial.print("Bed ");
-      Serial.println(incomingPacket[1]);
-      if (incomingPacket[1] == 0)
-      {
-        onOff[0] = false;
-      }
-      else if (incomingPacket[1] == 1)
-      {
-        onOff[0] = true;
-      }
-      break;
-    }
-    case 11:
-    {
-      Serial.print("Desk ");
-      Serial.println(incomingPacket[1]);
-      if (incomingPacket[1] == 0)
-      {
-        onOff[1] = false;
-      }
-      else if (incomingPacket[1] == 1)
-      {
-        onOff[1] = true;
-      }
-      break;
-    }
-    case 12:
-    {
-      Serial.print("Ceilling ");
-      Serial.println(incomingPacket[1]);
-      if (incomingPacket[1] == 0)
-      {
-        onOff[2] = false;
-      }
-      else if (incomingPacket[1] == 1)
-      {
-        onOff[2] = true;
-      }
-      break;
-    }
-    case 13:
-    {
-      Serial.print("Window ");
-      Serial.println(incomingPacket[1]);
-      if (incomingPacket[1] == 0)
-      {
-        onOff[3] = false;
-      }
-      else if (incomingPacket[1] == 1)
-      {
-        onOff[3] = true;
-      }
-      break;
-    }
-    break;
-    case 15:
-    {
-      sColor = String((char *)incomingPacket);
-      sColor.remove(0, 1);
-      Serial.println(sColor);
+    digitalWrite(LED_BUILTIN, HIGH);
 
-    }
-    break;
-    default:
-      break;
-    }
-    
-    if (packetSize != 0)
+    UdpRead();
+    if (packetSize > 0)
     {
-      for(int i=0 ; i < packetSize; i++){
-        incomingPacket[i] = 0;
-      } 
+      digitalWrite(LED_BUILTIN, LOW);
+      uint8_t value = incomingPacket[1];
+      // Serial.print(incomingPacket);
+      switch (incomingPacket[0])
+
+      {
+
+      case 3:
+      {
+        Serial.print("Brightness :");
+        BRIGHTNESS = value;
+        FastLED.setBrightness(BRIGHTNESS);
+        Serial.println(BRIGHTNESS);
+      }
+      break;
+      case 4:
+      {
+        Serial.print("Saturation");
+        Serial.println(value);
+      }
+      break;
+      case 5:
+      {
+        sColor = String((char *)incomingPacket);
+        sColor.remove(0, 1);
+        Serial.print("Color : ");
+        Serial.println(sColor);
+      }
+      break;
+      case 6:
+      {
+        Serial.print("Patterns");
+        Serial.println(value);
+      }
+      case 10:
+      {
+        Serial.print("Bed ");
+        Serial.println(incomingPacket[1]);
+        if (incomingPacket[1] == 0)
+        {
+          onOff[0] = false;
+        }
+        else if (incomingPacket[1] == 1)
+        {
+          onOff[0] = true;
+        }
+        break;
+      }
+      case 11:
+      {
+        Serial.print("Desk ");
+        Serial.println(incomingPacket[1]);
+        if (incomingPacket[1] == 0)
+        {
+          onOff[1] = false;
+        }
+        else if (incomingPacket[1] == 1)
+        {
+          onOff[1] = true;
+        }
+        break;
+      }
+      case 12:
+      {
+        Serial.print("Ceilling ");
+        Serial.println(incomingPacket[1]);
+        if (incomingPacket[1] == 0)
+        {
+          onOff[2] = false;
+        }
+        else if (incomingPacket[1] == 1)
+        {
+          onOff[2] = true;
+        }
+        break;
+      }
+      case 13:
+      {
+        Serial.print("Window ");
+        Serial.println(incomingPacket[1]);
+        if (incomingPacket[1] == 0)
+        {
+          onOff[3] = false;
+        }
+        else if (incomingPacket[1] == 1)
+        {
+          onOff[3] = true;
+        }
+        break;
+      }
+      break;
+      case 15:
+      {
+        // sColor = String((char *)incomingPacket);
+        // sColor.remove(0, 1);
+        // Serial.println(sColor);
+      }
+      break;
+      default:
+        break;
+      }
+
+      if (packetSize != 0)
+      {
+        digitalWrite(LED_BUILTIN, HIGH);
+        for (int i = 0; i < packetSize; i++)
+        {
+          incomingPacket[i] = 0;
+        }
+      }
     }
     // Call the current pattern function once, updating the 'leds' array
     gPatterns[gCurrentPatternNumber]();
@@ -189,44 +261,120 @@ void loop()
     // static uint8_t startIndex = 0;
     // startIndex = startIndex + 1; /* motion speed */
     // FillLEDsFromPaletteColors(startIndex);
+    // EVERY_N_MILLISECONDS(200)
+    // {
+    //   gHue++;
+    //   if (gHue > 3600)
+    //   {
+    //     gHue = 0;
+    //   }
+    // }
 
-    if (sColor == "rainbow"){
+    if (sColor == "rainbow")
+    {
+
       rainbow();
-    } else {
+    }
+    else
+    {
 
-      if (sColor == "bhw1_01") { currentPalette = bhw1_01_gp; } 
-      else if (sColor == "bhw1_04"){ currentPalette = bhw1_04_gp; }
-      else if (sColor == "bhw1_purplered"){ currentPalette = bhw1_purplered_gp; }
-      else if (sColor == "bhw1_w00t"){ currentPalette = bhw1_w00t_gp; }
-      else if (sColor == "bhw2_51"){ currentPalette = bhw2_51_gp; }
-      else if (sColor == "bhw2_57"){ currentPalette = bhw2_57_gp; }
-      else if (sColor == "bhw2_n"){ currentPalette = bhw2_n_gp; }
-      else if (sColor == "bhw3_23"){ currentPalette = bhw3_23_gp; }
-      else if (sColor == "bhw3_52"){ currentPalette = bhw3_52_gp; }
-      else if (sColor == "bhw4_018"){ currentPalette = bhw4_018_gp; }
-      else if (sColor == "bhw4_024"){ currentPalette = bhw4_024_gp; }
-      else if (sColor == "bhw4_048"){ currentPalette = bhw4_048_gp; }
-      else if (sColor == "bhw4_057"){ currentPalette = bhw4_057_gp; }
-      
+      if (sColor == "bhw1_01")
 
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw1_01_gp;
+      }
+      else if (sColor == "bhw1_04")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw1_04_gp;
+      }
+      else if (sColor == "bhw1_purplered")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw1_purplered_gp;
+      }
+      else if (sColor == "bhw1_w00t")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw1_w00t_gp;
+      }
+      else if (sColor == "bhw2_51")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw2_51_gp;
+      }
+      else if (sColor == "bhw2_57")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw2_57_gp;
+      }
+      else if (sColor == "bhw2_n")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw2_n_gp;
+      }
+      else if (sColor == "bhw3_23")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw3_23_gp;
+      }
+      else if (sColor == "bhw3_52")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw3_52_gp;
+      }
+      else if (sColor == "bhw4_018")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw4_018_gp;
+      }
+      else if (sColor == "bhw4_024")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw4_024_gp;
+      }
+      else if (sColor == "bhw4_048")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw4_048_gp;
+      }
+      else if (sColor == "bhw4_057")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw4_057_gp;
+      }
+      else if (sColor == "red")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = red_gp;
+      }
+      else if (sColor == "blue")
+      {
+        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = blue_gp;
+      }
+      else if (sColor == "white")
+      {
+        currentPalette = white_gp;
+        cpBED = whiteBED_gp;
+        cpCEILLING = whiteCEILLING_gp;
+        cpDESK = whiteDESK_gp;
+        cpWINL = whiteWIN_gp;
+        cpWINR = whiteWIN_gp;
+      }
+      // else if (sColor == "white")
+      // {
+      //   currentPalette = white_gp;
+      // }
 
       // currentPalette = sColor;
-      static uint8_t startIndex = 0;
-      startIndex = startIndex + 1; /* motion speed */
-      FillLEDsFromPaletteColors(startIndex);
+      // static uint8_t startIndex = 0;
+      // startIndex = startIndex + 1; /* motion speed */
+      FillLEDsFromPaletteColors(gHue);
     }
 
     SwitchOnOff();
-    
-    FastLED.show();
+  }
+  FastLED.show();
+  // Serial.println("fjgfhgvghj");
+  FastLED.delay(1000 / FRAMES_PER_SECOND);
 
-    FastLED.delay(1000 / FRAMES_PER_SECOND);
-
-
+  // EVERY_N_SECONDS(1)
+  // {
+  //   bool app = Ping.ping("blabla.local");
+  //   Serial.print("APP conectted : ");
+  //   Serial.println(app);
+  // }
 }
 
-void Color(){
-
+void Color()
+{
 }
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
@@ -239,49 +387,46 @@ void nextPattern()
 
 void FillLEDsFromPaletteColors(uint8_t colorIndex)
 {
-    if (onOff[0])
+  if (onOff[0])
   {
-  for (int i = 0; i < NUM_LEDS_BED; i++)
-  {
-    leds_bed[i] = ColorFromPalette(currentPalette, colorIndex, BRIGHTNESS, currentBlending);
-    colorIndex += 1;
+    for (int i = 0; i < NUM_LEDS_BED; i++)
+    {
+      leds_bed[i] = ColorFromPalette(cpBED, colorIndex, BRIGHTNESS, currentBlending);
+      colorIndex += 1;
+    }
   }
-  }
-      if (onOff[1])
+  if (onOff[1])
   {
-   
-  for (int i = 0; i < NUM_LEDS_DESK; i++)
-  {
-    leds_desk[i] = ColorFromPalette(currentPalette, colorIndex, BRIGHTNESS, currentBlending);
-    colorIndex += 1;
+
+    for (int i = 0; i < NUM_LEDS_DESK; i++)
+    {
+      leds_desk[i] = ColorFromPalette(cpDESK, colorIndex, BRIGHTNESS, currentBlending);
+      colorIndex += 1;
+    }
   }
-  }
-    if (onOff[2])
+  if (onOff[2])
   {
-  for (int i = 0; i < NUM_LEDS_CEILLING; i++)
-  {
-    leds_ceilling[i] = ColorFromPalette(currentPalette, colorIndex, BRIGHTNESS, currentBlending);
-    colorIndex += 1;
-  }
+    for (int i = 0; i < NUM_LEDS_CEILLING; i++)
+    {
+      leds_ceilling[i] = ColorFromPalette(cpCEILLING, colorIndex, BRIGHTNESS, currentBlending);
+      colorIndex += 1;
+    }
   }
 
-
-      if (onOff[3])
+  if (onOff[3])
   {
     for (int i = 0; i < NUM_LEDS_WIN; i++)
-  {
-    leds_winr[i] = ColorFromPalette(currentPalette, colorIndex, BRIGHTNESS, currentBlending);
-    colorIndex += 1;
-  }
-      for (int i = 0; i < NUM_LEDS_WIN; i++)
-  {
-    leds_winl[i] = ColorFromPalette(currentPalette, colorIndex, BRIGHTNESS, currentBlending);
-    colorIndex += 1;
-  }
+    {
+      leds_winr[i] = ColorFromPalette(cpWINR, colorIndex, BRIGHTNESS, currentBlending);
+      colorIndex += 1;
+    }
+    for (int i = 0; i < NUM_LEDS_WIN; i++)
+    {
+      leds_winl[i] = ColorFromPalette(cpWINL, colorIndex, BRIGHTNESS, currentBlending);
+      colorIndex += 1;
+    }
   }
 }
-
-
 
 void ChangePalettePeriodically()
 {
@@ -349,15 +494,16 @@ void rainbow()
   {
     fill_rainbow(leds_ceilling, NUM_LEDS_CEILLING, gHue, 1);
   }
-    if (onOff[3])
+  if (onOff[3])
   {
     fill_rainbow(leds_winr, NUM_LEDS_WIN, gHue, 1);
     fill_rainbow(leds_winl, NUM_LEDS_WIN, gHue, 1);
   }
 }
 
-void SwitchOnOff(){
-    if (!onOff[0])
+void SwitchOnOff()
+{
+  if (!onOff[0])
   {
     fadeToBlackBy(leds_bed, NUM_LEDS_BED, 1);
   }
@@ -369,7 +515,7 @@ void SwitchOnOff(){
   {
     fadeToBlackBy(leds_ceilling, NUM_LEDS_CEILLING, 1);
   }
-    if (!onOff[3])
+  if (!onOff[3])
   {
     fadeToBlackBy(leds_winr, NUM_LEDS_WIN, 1);
     fadeToBlackBy(leds_winl, NUM_LEDS_WIN, 1);
@@ -553,3 +699,6 @@ void breath()
   fill_solid(leds_ceilling, NUM_LEDS_CEILLING, CRGB(redLevel, 0, 128)); //fill the RGB pixel array with: redLevel, 0, 0
   bpmBreathlast = bpmBreath;
 }
+
+// uint8_t heatindex = (something from 0 - 255);
+// leds[i] = ColorFromPalette(myPal, heatindex); // normal palette access

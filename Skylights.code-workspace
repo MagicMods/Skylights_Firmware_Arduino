@@ -3,6 +3,9 @@
 		{
 			"name": "SkyLights",
 			"path": "."
+		},
+		{
+			"path": "../SkyLightsServer_Firmware_Arduino"
 		}
 	],
 	"settings": {

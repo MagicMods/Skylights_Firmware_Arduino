@@ -3,6 +3,49 @@
 #include <main.h>
 #define FASTLED_INTERNAL
 
+// DEFINE_GRADIENT_PALETTE(red_gp){
+//     255,255,255};
+
+// Gradient palette "red_gp", originally from
+// http://soliton.vm.bytemark.co.uk/pub/cpt-city/ds9/tn/red.png.index.html
+// converted for FastLED with gammas (2.6, 2.2, 2.5)
+// Size: 8 bytes of program space.
+
+DEFINE_GRADIENT_PALETTE(red_gp){
+    0,255,0,0,
+    255,255,0,0};
+
+DEFINE_GRADIENT_PALETTE(blue_gp){
+    0, 0, 0, 255,
+    255, 0, 0, 255};
+
+DEFINE_GRADIENT_PALETTE(white_gp){
+    0, 255, 255, 255,
+    255, 255, 255, 255};
+
+DEFINE_GRADIENT_PALETTE(whiteBED_gp){
+    0, 255, 255, 255,
+    255, 255, 255, 255};
+
+DEFINE_GRADIENT_PALETTE(whiteDESK_gp){
+    0, 255, 255, 255,
+    255, 255, 255, 255};
+
+DEFINE_GRADIENT_PALETTE(whiteCEILLING_gp){
+    0, 255, 255, 255,
+    100, 0, 0, 0,
+    150, 255, 255, 255,
+    200, 0, 0, 0,
+    255, 255, 255, 255};
+
+DEFINE_GRADIENT_PALETTE(whiteWIN_gp){
+    0, 255, 255, 255,
+    255, 255, 255, 255};
+
+// DEFINE_GRADIENT_PALETTE(white_gp){
+//     0, 255, 255, 255,
+    // 255, 255, 255, 255};
+
 DEFINE_GRADIENT_PALETTE(bhw4_018_gp){
     0, 32, 1, 26,
     45, 49, 1, 11,

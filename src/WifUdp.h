@@ -17,10 +17,11 @@ extern int packetSize;
 // const char * udpAddress;
 // const int udpPort;
 
-
+void WIFI_Connect();
 void SetupWifi();
 int UdpRead();
 int UdpReadSize();
-
+// void connectToWiFi(const char *ssid, const char *pwd);
+// void WiFiEvent(WiFiEvent_t event);
 
 #endif

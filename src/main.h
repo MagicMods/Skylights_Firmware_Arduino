@@ -19,6 +19,7 @@ void ChangePalettePeriodically();
 void SetupTotallyRandomPalette();
 void rainbowtest();
 void SwitchOnOff();
+void ping();
 // extern char incomingPacket[];
 // extern int incomingPacketSize;
 // extern CRGBPalette16 bhw4_018_gp;
