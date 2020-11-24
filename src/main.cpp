@@ -9,17 +9,18 @@
 
 FASTLED_USING_NAMESPACE
 
-#define DATA_PIN_CEILLING D5
+#define DATA_PIN_CEILLING D7
 #define DATA_PIN_DESK D6
-#define DATA_PIN_BED D3
-#define DATA_PIN_WINR D7
-#define DATA_PIN_WINL D8
+#define DATA_PIN_BED D2
+#define DATA_PIN_WINR D5
+#define DATA_PIN_WINL D3
 //#define CLK_PIN   4
 #define LED_TYPE WS2811
 #define COLOR_ORDER GRB
 #define NUM_LEDS_CEILLING 493
 #define NUM_LEDS_DESK 99
 #define NUM_LEDS_BED 96
+// #define NUM_LEDS_WIN 66
 #define NUM_LEDS_WIN 66
 
 CRGB leds_ceilling[NUM_LEDS_CEILLING];
@@ -52,14 +53,14 @@ Ticker timer;
 AsyncPing Pings[1];
 IPAddress addrs[1];
 
-const char *ips[] = {"192.168.1.8","maoix.local",NULL};
+const char *ips[] = {"192.168.1.8", "maoix.local", NULL};
 
 void setup()
 {
   Serial.begin(115200);
   delay(1000); // 3 second delay for recovery
   SetupWifi();
-  
+
   // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE, DATA_PIN_CEILLING, COLOR_ORDER>(leds_ceilling, NUM_LEDS_CEILLING).setCorrection(TypicalLEDStrip);
   FastLED.addLeds<LED_TYPE, DATA_PIN_DESK, COLOR_ORDER>(leds_desk, NUM_LEDS_DESK).setCorrection(TypicalLEDStrip);
@@ -109,7 +110,7 @@ SimplePatternList gPatterns = {
     rainbow,
     // fire,
     // breath,
-    // sinelon2,
+    sinelon2
     // rainbowWithGlitter,
     // confetti,
     // sinelon,
@@ -125,7 +126,7 @@ void ping()
   for (int i = 0; i < 1; i++)
   {
     Serial.printf("started ping to %s:\n", addrs[i].toString().c_str());
-    Pings[i].begin(addrs[i],1);
+    Pings[i].begin(addrs[i], 1);
   }
 }
 
@@ -175,9 +176,27 @@ void loop()
       break;
       case 6:
       {
-        Serial.print("Patterns");
+        Serial.print("SpeedPatterns");
         Serial.println(value);
       }
+      case 7:
+      {
+        Serial.print("STOP");
+        Serial.println(value);
+      }
+      break;
+      case 8:
+      {
+        Serial.print("PLAY");
+        Serial.println(value);
+      }
+      break;
+      case 9:
+      {
+        Serial.print("NEXT");
+        Serial.println(value);
+      }
+      break;
       case 10:
       {
         Serial.print("Bed ");
@@ -362,15 +381,7 @@ void loop()
     SwitchOnOff();
   }
   FastLED.show();
-  // Serial.println("fjgfhgvghj");
   FastLED.delay(1000 / FRAMES_PER_SECOND);
-
-  // EVERY_N_SECONDS(1)
-  // {
-  //   bool app = Ping.ping("blabla.local");
-  //   Serial.print("APP conectted : ");
-  //   Serial.println(app);
-  // }
 }
 
 void Color()
