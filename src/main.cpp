@@ -53,7 +53,7 @@ Ticker timer;
 AsyncPing Pings[1];
 IPAddress addrs[1];
 
-const char *ips[] = {"192.168.1.8", "maoix.local", NULL};
+const char *ips[] = {"192.168.1.1", "maoix.local", NULL};
 
 void setup()
 {

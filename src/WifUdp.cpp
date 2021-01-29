@@ -14,7 +14,7 @@ bool connected = false;
     // char incomingPacket[26];  // buffer for incoming packets
     unsigned int localUdpPort = 9000; // local port to listen on
 
-const char* udpAddress = "192.168.1.30";
+const char* udpAddress = "192.168.1.130";
 const int udpPort = 9000;
 
 // credentials for ESP8266 STA
@@ -24,7 +24,7 @@ const int udpPort = 9000;
 const char* sta_ssid1 = "MagicMods";
 const char* sta_password1 = "Sx35018650";
 
-IPAddress IPAP(192, 168, 1, 30);
+IPAddress IPAP(192, 168, 1, 130);
 IPAddress gatewayAP(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 
