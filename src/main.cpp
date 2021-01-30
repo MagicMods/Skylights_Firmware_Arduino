@@ -261,6 +261,27 @@ void loop()
         // Serial.println(sColor);
       }
       break;
+      case 20:
+        // Serial.print("Ceilling ");
+        // Serial.println(incomingPacket[1]);
+
+        if (incomingPacket[1] == 0)
+        {
+          for (int i = 0; i < 4; i++)
+          {
+            onOff[i] = false;
+          }
+          Serial.println("ALL OFF");
+        }
+        else if (incomingPacket[1] == 1)
+        {
+                   for (int i = 0; i < 4; i++)
+          {
+            onOff[i] = true;
+          }
+          Serial.println("ALL ON");
+        }
+        break;
       default:
         break;
       }
@@ -300,63 +321,123 @@ void loop()
       if (sColor == "bhw1_01")
 
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw1_01_gp;
+        cpDESK = bhw1_01_gp;
+        cpCEILLING = bhw1_01_gp;
+        cpBED = bhw1_01_gp;
+        cpWINL = bhw1_01_gp;
+        cpWINR = bhw1_01_gp;
       }
       else if (sColor == "bhw1_04")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw1_04_gp;
+        cpDESK = bhw1_04_gp;
+        cpCEILLING = bhw1_04_gp;
+        cpBED = bhw1_04_gp;
+        cpWINL = bhw1_04_gp;
+        cpWINR = bhw1_04_gp;
       }
       else if (sColor == "bhw1_purplered")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw1_purplered_gp;
+        cpDESK = bhw1_purplered_gp;
+        cpCEILLING = bhw1_purplered_gp;
+        cpBED = bhw1_purplered_gp;
+        cpWINL = bhw1_purplered_gp;
+        cpWINR = bhw1_purplered_gp;
       }
       else if (sColor == "bhw1_w00t")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw1_w00t_gp;
+        cpDESK = bhw1_w00t_gp;
+        cpCEILLING = bhw1_w00t_gp;
+        cpBED = bhw1_w00t_gp;
+        cpWINL = bhw1_w00t_gp;
+        cpWINR = bhw1_w00t_gp;
       }
       else if (sColor == "bhw2_51")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw2_51_gp;
+        cpDESK = bhw2_51_gp;
+        cpCEILLING = bhw2_51_gp;
+        cpBED = bhw2_51_gp;
+        cpWINL = bhw2_51_gp;
+        cpWINR = bhw2_51_gp;
       }
       else if (sColor == "bhw2_57")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw2_57_gp;
+        cpDESK = bhw2_57_gp;
+        cpCEILLING = bhw2_57_gp;
+        cpBED = bhw2_57_gp;
+        cpWINL = bhw2_57_gp;
+        cpWINR = bhw2_57_gp;
       }
       else if (sColor == "bhw2_n")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw2_n_gp;
+        cpDESK = bhw2_n_gp;
+        cpCEILLING = bhw2_n_gp;
+        cpBED = bhw2_n_gp;
+        cpWINL = bhw2_n_gp;
+        cpWINR = bhw2_n_gp;
       }
       else if (sColor == "bhw3_23")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw3_23_gp;
+        cpDESK = bhw3_23_gp;
+        cpCEILLING = bhw3_23_gp;
+        cpBED = bhw3_23_gp;
+        cpWINL = bhw3_23_gp;
+        cpWINR = bhw3_23_gp;
       }
       else if (sColor == "bhw3_52")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw3_52_gp;
+        cpDESK = bhw3_52_gp;
+        cpCEILLING = bhw3_52_gp;
+        cpBED = bhw3_52_gp;
+        cpWINL = bhw3_52_gp;
+        cpWINR = bhw3_52_gp;
       }
       else if (sColor == "bhw4_018")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw4_018_gp;
+        cpDESK = bhw4_018_gp;
+        cpCEILLING = bhw4_018_gp;
+        cpBED = bhw4_018_gp;
+        cpWINL = bhw4_018_gp;
+        cpWINR = bhw4_018_gp;
       }
       else if (sColor == "bhw4_024")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw4_024_gp;
+        cpDESK = bhw4_024_gp;
+        cpCEILLING = bhw4_024_gp;
+        cpBED = bhw4_024_gp;
+        cpWINL = bhw4_024_gp;
+        cpWINR = bhw4_024_gp;
       }
       else if (sColor == "bhw4_048")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw4_048_gp;
+        cpDESK = bhw4_048_gp;
+        cpCEILLING = bhw4_048_gp;
+        cpBED = bhw4_048_gp;
+        cpWINL = bhw4_048_gp;
+        cpWINR = bhw4_048_gp;
       }
       else if (sColor == "bhw4_057")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = bhw4_057_gp;
+        cpDESK = bhw4_057_gp;
+        cpCEILLING = bhw4_057_gp;
+        cpBED = bhw4_057_gp;
+        cpWINL = bhw4_057_gp;
+        cpWINR = bhw4_057_gp;
       }
       else if (sColor == "red")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = red_gp;
+        cpDESK = red_gp;
+        cpCEILLING = red_gp;
+        cpBED = red_gp;
+        cpWINL = red_gp;
+        cpWINR = red_gp;
       }
       else if (sColor == "blue")
       {
-        cpDESK, cpCEILLING, cpBED, cpWINL, cpWINR = blue_gp;
+        cpDESK = blue_gp;
+        cpCEILLING = blue_gp;
+        cpBED = blue_gp;
+        cpWINL = blue_gp;
+        cpWINR = blue_gp;
       }
       else if (sColor == "white")
       {
@@ -367,10 +448,6 @@ void loop()
         cpWINL = whiteWIN_gp;
         cpWINR = whiteWIN_gp;
       }
-      // else if (sColor == "white")
-      // {
-      //   currentPalette = white_gp;
-      // }
 
       // currentPalette = sColor;
       // static uint8_t startIndex = 0;
@@ -382,10 +459,6 @@ void loop()
   }
   FastLED.show();
   FastLED.delay(1000 / FRAMES_PER_SECOND);
-}
-
-void Color()
-{
 }
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
